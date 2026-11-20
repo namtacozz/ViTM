@@ -1,0 +1,22 @@
+USE atm_db;
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  thoi_gian DATETIME DEFAULT CURRENT_TIMESTAMP,
+  atm_id VARCHAR(30) NOT NULL,
+  so_the VARCHAR(20),
+  account_id INT,
+  hanh_dong VARCHAR(50) NOT NULL,
+  chi_tiet VARCHAR(255),
+  ket_qua VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS atm_vault (
+  menh_gia INT PRIMARY KEY,
+  so_to INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS atm_config (
+  config_key VARCHAR(50) PRIMARY KEY,
+  config_value VARCHAR(200) NOT NULL
+);
