@@ -1,4 +1,4 @@
-# Kiến trúc Hệ thống VietBank ATM (Chuẩn Maven)
+# Kiến trúc Hệ thống VITB - VITBANK ViTM (Chuẩn Maven)
 
 ## 1. Phân tầng ứng dụng (`com.vietbank.atm`)
 - **`config/`**: `AppConfig` (đọc `application.properties`), `DbConfig` (quản lý kết nối MySQL, `db.properties`, khởi tạo schema + seed).

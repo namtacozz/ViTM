@@ -25,8 +25,8 @@ public class WithdrawService extends BaseService {
             long newBalance = acc.soDu - amount;
             accountDao.updateBalance(c, accId, newBalance);
             cashDao.deductNotes(c, outcome.breakdown);
-            return recordSuccess(c, ATMSystemService.generateRefCode(), accId, cardNo, "RUT", amount, 0L, newBalance, "-", "VietBank",
-                "Rút tiền mặt tại ATM", "WITHDRAW", " Amount=" + amount, outcome.breakdown);
+            return recordSuccess(c, ATMSystemService.generateRefCode(), accId, cardNo, "RUT", amount, 0L, newBalance, "-", "VITBANK",
+                "Rút tiền mặt tại ViTM", "WITHDRAW", " Amount=" + amount, outcome.breakdown);
         }, fail("err.db_error"));
     }
 }

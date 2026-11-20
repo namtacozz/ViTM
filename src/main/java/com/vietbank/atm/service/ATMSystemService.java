@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ATMSystemService extends BaseService {
-    public static final String ATM_ID = AppConfig.getString("atm.id", "VB-DN-086");
+    public static final String ATM_ID = AppConfig.getString("atm.id", "VITB-DN-086");
     public static final String ATM_LOCATION = AppConfig.getString("atm.location", "128 Nguyễn Văn Linh, Hải Châu, Đà Nẵng");
 
     public static String generateRefCode() {
-        return "VB" + new SimpleDateFormat("yyyyMMdd").format(new Date()) + ThreadLocalRandom.current().nextInt(1000, 9999);
+        return "VITB" + new SimpleDateFormat("yyyyMMdd").format(new Date()) + ThreadLocalRandom.current().nextInt(1000, 9999);
     }
 
     public String getAtmStatus() {

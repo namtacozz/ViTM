@@ -1,4 +1,4 @@
-# Sơ đồ Luồng Trạng thái ATM (`ATMState`)
+# Sơ đồ Luồng Trạng thái ViTM (`ATMState`)
 
 ```mermaid
 flowchart TD

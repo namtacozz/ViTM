@@ -82,7 +82,7 @@ class TransactionServicesTest {
 
     @Test
     void transferShouldRollbackWhenBeneficiaryNotFound() {
-        TransactionResult res = transferService.transfer(1, "9704001234567890", new BankInfo("VB", "VietBank", 0L), "9999999999", 500_000L, "TEST");
+        TransactionResult res = transferService.transfer(1, "9704001234567890", new BankInfo("VITB", "VITBANK", 0L), "9999999999", 500_000L, "TEST");
         assertFalse(res.thanhCong);
         assertEquals("err.transfer_acc_not_found", res.maLoi);
         assertEquals(3_000_000L, sysService.getBalance(1));
@@ -122,7 +122,7 @@ class TransactionServicesTest {
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
-        BankInfo vb = new BankInfo("VB", "VietBank", 0L);
+        BankInfo vb = new BankInfo("VITB", "VITBANK", 0L);
 
         Future<TransactionResult> f1 = pool.submit(() -> {
             ready.countDown();

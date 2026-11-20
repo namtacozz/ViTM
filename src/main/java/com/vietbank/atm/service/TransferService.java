@@ -14,7 +14,7 @@ public class TransferService extends BaseService {
 
     public List<BankInfo> getSupportedBanks() {
         return List.of(
-            new BankInfo("VB", "VietBank (Nội bộ)", 0L),
+            new BankInfo("VITB", "VITBANK (Nội bộ)", 0L),
             new BankInfo("VCB", "Vietcombank", 5_500L),
             new BankInfo("TCB", "Techcombank", 5_500L),
             new BankInfo("MB", "MB Bank", 5_500L),
@@ -26,7 +26,7 @@ public class TransferService extends BaseService {
     public String lookupBeneficiary(String bankCode, String accNo) {
         if (accNo == null || accNo.trim().isEmpty()) return null;
         return withConn(c -> {
-            String raw = "VB".equalsIgnoreCase(bankCode)
+            String raw = "VITB".equalsIgnoreCase(bankCode)
                 ? accountDao.findInternalHolderName(c, accNo.trim())
                 : accountDao.findExternalHolderName(c, bankCode, accNo.trim());
             return raw != null ? MoneyFormat.toAsciiUpperName(raw) : null;
@@ -45,14 +45,14 @@ public class TransferService extends BaseService {
 
     public TransactionResult transfer(int accId, String cardNo, BankInfo destBank, String destAccNo, long amount, String remark) {
         String cleanDest = destAccNo == null ? "" : destAccNo.trim();
-        String cleanRemark = (remark == null || remark.trim().isEmpty()) ? "CHUYEN KHOAN ATM" : remark.trim();
+        String cleanRemark = (remark == null || remark.trim().isEmpty()) ? "CHUYEN KHOAN ViTM" : remark.trim();
         long fee = destBank != null ? destBank.fee : 0L;
-        String bankCode = destBank != null ? destBank.code : "VB";
-        String bankName = destBank != null ? destBank.name : "VietBank";
+        String bankCode = destBank != null ? destBank.code : "VITB";
+        String bankName = destBank != null ? destBank.name : "VITBANK";
 
         return inTransaction(c -> {
             Account srcAcc, internalDest = null;
-            if ("VB".equalsIgnoreCase(bankCode)) {
+            if ("VITB".equalsIgnoreCase(bankCode)) {
                 Integer destId = accountDao.findIdByAccountNumber(c, cleanDest);
                 if (destId == null) return fail(c, "err.transfer_acc_not_found");
                 if (destId == accId) return fail(c, "err.transfer_self");
@@ -69,9 +69,9 @@ public class TransferService extends BaseService {
             if (srcAcc == null) return fail(c, "err.db_error");
 
             String err = validateTransferLogic(amount, fee, txnDao.sumTodayByType(c, accId, "CHUYEN"), srcAcc.soDu,
-                "VB".equalsIgnoreCase(bankCode) ? srcAcc.soTaiKhoan : "", cleanDest);
+                "VITB".equalsIgnoreCase(bankCode) ? srcAcc.soTaiKhoan : "", cleanDest);
             if (err != null) return fail(c, err);
-            if (!"VB".equalsIgnoreCase(bankCode) && accountDao.findExternalHolderName(c, bankCode, cleanDest) == null) {
+            if (!"VITB".equalsIgnoreCase(bankCode) && accountDao.findExternalHolderName(c, bankCode, cleanDest) == null) {
                 return fail(c, "err.transfer_acc_not_found");
             }
 
@@ -81,7 +81,7 @@ public class TransferService extends BaseService {
             if (internalDest != null) {
                 long newDestBalance = internalDest.soDu + amount;
                 accountDao.updateBalance(c, internalDest.id, newDestBalance);
-                txnDao.insertTransaction(c, ref + "R", internalDest.id, "NHAN", amount, 0L, newDestBalance, srcAcc.soTaiKhoan, "VietBank", cleanRemark, ATMSystemService.ATM_LOCATION);
+                txnDao.insertTransaction(c, ref + "R", internalDest.id, "NHAN", amount, 0L, newDestBalance, srcAcc.soTaiKhoan, "VITBANK", cleanRemark, ATMSystemService.ATM_LOCATION);
             }
             return recordSuccess(c, ref, accId, cardNo, "CHUYEN", amount, fee, newSrcBalance, cleanDest, bankName,
                 cleanRemark, "TRANSFER", " To=" + bankCode + ":" + cleanDest + " Amount=" + amount + " Fee=" + fee, null);

@@ -9,8 +9,8 @@
     <version>2.0.0</version>
     <packaging>jar</packaging>
 
-    <name>VietBank ATM Simulator</name>
-    <description>VietBank ATM Ki-ot Simulator with Cam ViT Design System</description>
+    <name>VITBANK ViTM Simulator</name>
+    <description>VITB - VITBANK ViTM Ki-ot Simulator with Cam ViT Design System</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

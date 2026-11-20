@@ -25,7 +25,7 @@ public class PinService extends BaseService {
             Account acc = accountDao.findById(c, accId);
             cardDao.updatePin(c, cleanCard, newHash);
             return recordSuccess(c, ATMSystemService.generateRefCode(), accId, cleanCard, "DOI_PIN", 0L, 0L,
-                acc != null ? acc.soDu : 0L, "-", "VietBank", "Đổi mã PIN thẻ ATM", "CHANGE_PIN", "", null);
+                acc != null ? acc.soDu : 0L, "-", "VITBANK", "Đổi mã PIN thẻ ViTM", "CHANGE_PIN", "", null);
         }, fail("err.db_error"));
     }
 }

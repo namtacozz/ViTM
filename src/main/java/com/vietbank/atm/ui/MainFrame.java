@@ -90,7 +90,7 @@ public class MainFrame extends JFrame {
     private String sysErrMode = "MAINTENANCE";
 
     private TransactionResult lastTxnResult;
-    private String lastTxnType = "", lastTxnPartner = "-", lastTxnBank = "VietBank", lastTxnContent = "";
+    private String lastTxnType = "", lastTxnPartner = "-", lastTxnBank = "VITBANK", lastTxnContent = "";
     private long lastTxnAmount;
     private boolean wantsReceipt;
     private JTextField activeInputField;
@@ -243,7 +243,7 @@ public class MainFrame extends JFrame {
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         left.setOpaque(false);
-        JLabel badge = new JLabel("ATM");
+        JLabel badge = new JLabel("ViTM");
         badge.setOpaque(true);
         badge.setBackground(Colors.PRIMARY);
         badge.setForeground(Color.WHITE);
@@ -311,7 +311,7 @@ public class MainFrame extends JFrame {
         footer.setPreferredSize(new Dimension(0, 28));
         footer.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.BORDER_DEFAULT), BorderFactory.createEmptyBorder(4, 16, 4, 16)));
-        JLabel brand = new JLabel("VIETBANK 24/7");
+        JLabel brand = new JLabel("VITB - VITBANK 24/7");
         brand.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         brand.setForeground(Colors.TEXT_MUTED);
         lblFooterCountdown = new JLabel("", SwingConstants.RIGHT);
@@ -751,7 +751,7 @@ public class MainFrame extends JFrame {
         for (int i = 0; i < supportedBanks.size() && i < 6; i++) {
             BankInfo b = supportedBanks.get(i);
             String feeTxt = b.fee == 0 ? "Miễn phí" : ("Phí " + MoneyFormat.formatMoney(b.fee));
-            JButton btn = Theme.createAtmMenuButton(b.name + " (" + feeTxt + ")", i % 2 == 0);
+            JButton btn = Theme.createAtmMenuButton(b.code + " - " + b.name + " (" + feeTxt + ")", i % 2 == 0);
             btn.addActionListener(e -> selectBankForTransfer(b));
             grid.add(btn);
         }
@@ -1265,7 +1265,7 @@ public class MainFrame extends JFrame {
             }
             case TRANSFER_INPUT -> {
                 lblHeaderTitle.setText(I18n.get("transfer.input_title"));
-                lblSelectedBankVal.setText(selectedBank.name);
+                lblSelectedBankVal.setText(selectedBank.toString());
                 activeInputField = txtTransAcc;
                 updateTransferFocusBorders();
                 SwingUtilities.invokeLater(() -> txtTransAcc.requestFocusInWindow());
@@ -1403,7 +1403,7 @@ public class MainFrame extends JFrame {
     private void executeWithdraw() {
         runProcessing(I18n.get("proc.notice_withdraw"), () -> finishTxn(
             withdrawService.withdraw(session.getAccId(), session.getCardNo(), pendingWithdrawAmount),
-            "RUT", pendingWithdrawAmount, "-", "VietBank", "Rút tiền mặt tại ATM", ATMState.WITHDRAW_MENU));
+            "RUT", pendingWithdrawAmount, "-", "VITBANK", "Rút tiền mặt tại ViTM", ATMState.WITHDRAW_MENU));
     }
 
     private void countDepositTray() {
@@ -1423,13 +1423,13 @@ public class MainFrame extends JFrame {
     private void executeDeposit() {
         runProcessing(I18n.get("proc.notice_deposit"), () -> finishTxn(
             depositService.deposit(session.getAccId(), session.getCardNo(), pendingDepositNotes),
-            "NAP", pendingDepositNotes.tongTien(), "-", "VietBank", "Nộp tiền mặt tại ATM", ATMState.DEPOSIT_TRAY));
+            "NAP", pendingDepositNotes.tongTien(), "-", "VITBANK", "Nộp tiền mặt tại ViTM", ATMState.DEPOSIT_TRAY));
     }
 
     private void lookupBeneficiaryName() {
         String dest = txtTransAcc.getText().trim();
         if (dest.isEmpty()) { ATMDialogs.showErrorModal(this, I18n.get("err.transfer_acc_empty")); return; }
-        if ("VB".equals(selectedBank.code) && dest.equals(session.getAccountNo())) { ATMDialogs.showErrorModal(this, I18n.get("err.transfer_self")); return; }
+        if ("VITB".equals(selectedBank.code) && dest.equals(session.getAccountNo())) { ATMDialogs.showErrorModal(this, I18n.get("err.transfer_self")); return; }
         String name = transferService.lookupBeneficiary(selectedBank.code, dest);
         if (name == null) {
             pendingTransName = "";
@@ -1453,14 +1453,14 @@ public class MainFrame extends JFrame {
         long amt;
         try { amt = Long.parseLong(rawAmt); } catch (NumberFormatException ex) { ATMDialogs.showErrorModal(this, I18n.get("err.amount_invalid")); return; }
         String err = transferService.validateTransferLogic(amt, selectedBank.fee, 0L, sysService.getBalance(session.getAccId()),
-            "VB".equals(selectedBank.code) ? session.getAccountNo() : "", dest);
+            "VITB".equals(selectedBank.code) ? session.getAccountNo() : "", dest);
         if (err != null) { ATMDialogs.showErrorModal(this, resolveErrorMessage(err)); return; }
 
         pendingTransAmount = amt;
         pendingTransContent = txtTransContent.getText().trim();
         if (pendingTransContent.isEmpty()) pendingTransContent = I18n.get("transfer.default_content");
 
-        lblTransConfBank.setText(selectedBank.name);
+        lblTransConfBank.setText(selectedBank.toString());
         lblTransConfSender.setText(MoneyFormat.maskAccountNumber(session.getAccountNo()));
         lblTransConfReceiver.setText(MoneyFormat.maskAccountNumber(pendingTransAcc));
         lblTransConfName.setText(pendingTransName);
@@ -1517,7 +1517,7 @@ public class MainFrame extends JFrame {
     private void exportStatementToFile() {
         String file = "SaoKe_" + MoneyFormat.maskAccountNumber(session.getAccountNo()).replace("•", "x") + "_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".txt";
         try (FileWriter fw = new FileWriter(file, StandardCharsets.UTF_8)) {
-            fw.write("VIETBANK ATM - MINI STATEMENT\nAccount: " + MoneyFormat.maskAccountNumber(session.getAccountNo()) + " | Holder: " + session.getHolderName() + "\n--------------------------------------------------------------------------------\n");
+            fw.write("VITB - VITBANK ViTM - MINI STATEMENT\nAccount: " + MoneyFormat.maskAccountNumber(session.getAccountNo()) + " | Holder: " + session.getHolderName() + "\n--------------------------------------------------------------------------------\n");
             for (int i = 0; i < modelStatement.getRowCount(); i++) {
                 fw.write(String.format("%s | %s | %-8s | %15s | %15s | %s\n",
                     modelStatement.getValueAt(i, 0), modelStatement.getValueAt(i, 1), modelStatement.getValueAt(i, 2),
@@ -1538,8 +1538,8 @@ public class MainFrame extends JFrame {
 
     private void prepareAndShowReceipt() {
         StringBuilder sb = new StringBuilder();
-        sb.append("============================================\n            VIETBANK ATM RECEIPT            \n============================================\n");
-        sb.append("ATM ID       : ").append(ATMSystemService.ATM_ID).append("\n");
+        sb.append("============================================\n         VITB - VITBANK ViTM RECEIPT        \n============================================\n");
+        sb.append("ViTM ID      : ").append(ATMSystemService.ATM_ID).append("\n");
         sb.append("Địa điểm     : ").append(lastTxnResult != null && lastTxnResult.diaDiemAtm != null ? lastTxnResult.diaDiemAtm : ATMSystemService.ATM_LOCATION).append("\n");
         sb.append("Thời gian    : ").append(lastTxnResult != null ? lastTxnResult.thoiGian : "").append("\n");
         sb.append("Mã tham chiếu: ").append(lastTxnResult != null ? lastTxnResult.maThamChieu : "").append("\n--------------------------------------------\n");
@@ -1552,7 +1552,7 @@ public class MainFrame extends JFrame {
         if ("CHUYEN".equals(lastTxnType)) sb.append("Ngân hàng    : ").append(lastTxnBank).append("\nNgười nhận   : ").append(lastTxnPartner).append("\n");
         sb.append("Nội dung     : ").append(lastTxnContent == null || lastTxnContent.isEmpty() ? "-" : lastTxnContent).append("\n");
         sb.append("Số dư còn lại: ").append(MoneyFormat.formatMoney(lastTxnResult != null ? lastTxnResult.soDuMoi : 0)).append("\n");
-        sb.append("============================================\n  HOTLINE: 1900 5555 88  |  VIETBANK 24/7  \n    CẢM ƠN QUÝ KHÁCH ĐÃ SỬ DỤNG VIETBANK!   \n");
+        sb.append("============================================\n  HOTLINE: 1900 5555 88  |  VITBANK 24/7   \n    CẢM ƠN QUÝ KHÁCH ĐÃ SỬ DỤNG VITBANK!   \n");
         txtReceipt.setText(sb.toString());
         navigateTo(ATMState.RECEIPT_VIEW);
     }

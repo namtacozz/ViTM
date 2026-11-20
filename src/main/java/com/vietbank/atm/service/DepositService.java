@@ -19,8 +19,8 @@ public class DepositService extends BaseService {
             long newBalance = acc.soDu + amount;
             accountDao.updateBalance(c, accId, newBalance);
             cashDao.addNotes(c, countedNotes);
-            return recordSuccess(c, ATMSystemService.generateRefCode(), accId, cardNo, "NAP", amount, 0L, newBalance, "-", "VietBank",
-                "Nộp tiền mặt tại ATM", "DEPOSIT", " Amount=" + amount, countedNotes);
+            return recordSuccess(c, ATMSystemService.generateRefCode(), accId, cardNo, "NAP", amount, 0L, newBalance, "-", "VITBANK",
+                "Nộp tiền mặt tại ViTM", "DEPOSIT", " Amount=" + amount, countedNotes);
         }, fail("err.db_error"));
     }
 }

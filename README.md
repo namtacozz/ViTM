@@ -1,89 +1,171 @@
-# 🏧 VIETBANK ATM SIMULATOR (DESKTOP) — CHUẨN KI-ỐT VIETBANK (CAM ViT)
+# 🏧 VITB - VITBANK ViTM SIMULATOR (v2.0.0)
 
-Hệ thống mô phỏng cây rút tiền tự động (ATM) chuẩn ngân hàng Việt Nam, xây dựng trên nền tảng **Java Swing thuần** và **MySQL**, tuân thủ cấu trúc tinh gọn 3 file nguồn, không chia package, mã nguồn sạch không comment thừa.
-
-### 🎨 Bộ nhận diện thương hiệu Cam ViT
-- **Màu chủ đạo (Cam ViT)**: `#E0562D` (Header, nút xác nhận, header bảng, viền nhấn thương hiệu).
-- **Màu nền ứng dụng**: Nền kem ấm `#FAF8F5` tạo chiều sâu tách lớp rõ rệt với khung thẻ trắng tinh khiết `#FFFFFF`.
-- **Chữ chính / Đen xám tối (Dark Charcoal)**: `#18181B` (Hiển thị văn bản, số tiền, thông tin tài khoản sắc nét không ánh xanh).
-- **Nền cam nhạt (nhãn/thẻ)**: `#FFF7ED` (viền `#FED7AA`) (Dùng cho thẻ thông tin, highlight số dư, trạng thái active input).
-- **Viền mặc định ô nhập liệu**: `#D4D4D8` (xám trung tính rõ ranh giới) và tự động chuyển sang `#DC2626` (đỏ) khi có lỗi.
+Hệ thống mô phỏng ki-ốt giao dịch ngân hàng tự động **ViTM** của ngân hàng **VITB - VITBANK**, xây dựng theo kiến trúc phân tầng chuẩn **Maven (Java 21 + Java Swing + JDBC MySQL 8.4)**, tích hợp bộ kiểm thử tự động **JUnit 5 + H2 In-Memory Database**.
 
 ---
 
-## 1. Cấu Trúc Dự Án
+## 🎨 1. Hệ Thống Thiết Kế & Khung Phần Cứng Ki-ốt (Cam ViT Design System)
 
+Giao diện mô phỏng trọn vẹn khung máy ki-ốt vật lý tỷ lệ 4:3 (`1024×768`) với màn hình LCD trung tâm, **8 phím cứng FDK** hai bên và **3 khe phần cứng** có đèn LED báo hiệu trạng thái theo ngữ cảnh:
+
+| Thành phần | Mã màu | Vai trò hiển thị |
+|---|---|---|
+| **Cam ViT (Primary)** | `#E0562D` | Thương hiệu `VITB - VITBANK`, huy hiệu `ViTM`, nút hành động chính, viền tiêu điểm (focus) |
+| **Cam đậm (Primary Dark)** | `#C2411E` | Hiệu ứng nhấn nút, trạng thái active |
+| **Nền màn hình (Screen BG)** | `#FAF8F5` | Nền kem ấm tách lớp rõ với các khung thẻ nội dung trắng `#FFFFFF` |
+| **Nền thẻ nhấn (Accent BG)** | `#FFF7ED` | Khung thông tin tài khoản, thẻ nổi bật (viền `#FED7AA`) |
+| **Chữ chính (Dark Charcoal)** | `#18181B` | Văn bản, số tiền, thông tin đối soát độ tương phản cao |
+| **Vỏ máy Bezel & Phím FDK** | `#1E2024` / `#3F424A` | Khung vỏ ki-ốt, cụm 8 phím FDK (`F1`–`F8`) và 3 khe phần cứng (`KHE THẺ`, `KHE NHẬN TIỀN`, `KHE BIÊN LAI`) |
+| **Trạng thái ngữ nghĩa** | `#10B981` / `#D97706` / `#DC2626` | Thành công (Xanh lục) • Cảnh báo/Xóa (Vàng hổ phách) • Lỗi/Hủy/Khóa (Đỏ) |
+
+---
+
+## 🏗️ 2. Kiến Trúc Phân Tầng & Cấu Trúc Thư Mục
+
+Mã nguồn được tổ chức theo kiến trúc phân tầng rõ ràng (**UI → Service → DAO → Database**), tối ưu hóa tái sử dụng qua lớp cha trừu tượng (`BaseDao`, `BaseService`, `CashVault extends CashBreakdown`) và hoàn toàn không chứa chú thích thừa.
+
+```text
+ViTM/
+├── pom.xml                                 # Cấu hình Maven (Java 21, MySQL Connector/J 8.4, JUnit 5, H2)
+├── README.md                               # Tài liệu hướng dẫn toàn diện dự án
+├── database/
+│   ├── schema.sql                          # DDL khởi tạo CSDL atm_db (6 bảng chuẩn khóa ngoại & chỉ mục)
+│   ├── seed.sql                            # Dữ liệu mẫu: quỹ tiền, cấu hình ViTM, tài khoản nội bộ & liên ngân hàng
+│   └── migrations/
+│       └── V2__add_audit_log.sql           # Kịch bản nâng cấp bảng nhật ký kiểm toán & quỹ tiền
+├── scripts/
+│   ├── init_db.bat                         # Script nạp tự động schema.sql và seed.sql vào MySQL
+│   ├── run.bat                             # Script biên dịch & khởi chạy ứng dụng trên Windows
+│   └── run.sh                              # Script biên dịch & khởi chạy ứng dụng trên Linux/macOS
+├── docs/
+│   ├── architecture.md                     # Tài liệu kiến trúc phân tầng hệ thống
+│   ├── flow-diagram.md                     # Sơ đồ Mermaid luồng trạng thái ATMState
+│   ├── BaoCao_ThietKe_KiemThu_ATM.html     # Báo cáo thiết kế & kiểm thử chi tiết (HTML)
+│   ├── BaoCao_ThietKe_KiemThu_ATM.pdf      # Báo cáo thiết kế & kiểm thử chi tiết (PDF)
+│   └── screenshots/                        # Bộ 31 ảnh chụp toàn bộ màn hình & popup trạng thái
+└── src/
+    ├── main/
+    │   ├── java/com/vietbank/atm/
+    │   │   ├── Main.java                   # Điểm khởi chạy ứng dụng
+    │   │   ├── config/                     # AppConfig (đọc cấu hình), DbConfig (quản lý kết nối & tự khởi tạo DB)
+    │   │   ├── state/                      # ATMState (26 trạng thái), SessionManager (phiên & bộ đếm timeout)
+    │   │   ├── model/                      # Account, Card, BankInfo, CashBreakdown, CashVault, TransactionRecord/Result
+    │   │   ├── dao/                        # BaseDao, AccountDao, CardDao, CashDao, TransactionDao, AuditLogDao
+    │   │   ├── service/                    # BaseService, AuthService, WithdrawService, DepositService,
+    │   │   │                               # TransferService, PinService, CashDispenser, ATMSystemService
+    │   │   ├── ui/                         # MainFrame, component/ (ATMDialogs, HardwareSlotPanel),
+    │   │   │                               # theme/ (Colors, Fonts, Theme)
+    │   │   └── util/                       # Hasher (PBKDF2 + SHA-256), I18n (ResourceBundle UTF-8), MoneyFormat
+    │   └── resources/
+    │       ├── application.properties      # Thông số vận hành máy ViTM (VITB-DN-086, hạn mức, timeout)
+    │       └── i18n/
+    │           ├── messages_vi.properties  # Từ điển giao diện Tiếng Việt
+    │           └── messages_en.properties  # Từ điển giao diện Tiếng Anh
+    └── test/
+        └── java/com/vietbank/atm/
+            ├── service/                    # CashDispenserTest, PinServiceTest, TransferServiceTest, TransactionServicesTest
+            └── util/                       # FormatAndI18nTest
 ```
-f:\AppMaking\ViTM\
-├── schema.sql              # CSDL, bảng accounts, cards, transactions & dữ liệu mẫu (SHA-256 kèm Salt)
-├── DB.java                 # Toàn bộ logic JDBC, Transaction, SELECT ... FOR UPDATE, nạp tiền, chia cơ số tiền
-├── ATM.java                # Giao diện Ki-ốt JFrame 980x700, Menu 4 trái - 4 phải đối xứng, Numpad 3 màu
-├── mysql-connector-j.jar   # Driver JDBC MySQL
-├── init_db.bat             # Script chạy nạp schema.sql vào MySQL 1-click
-├── run.bat                 # Script chạy ứng dụng ATM 1-click
-├── screenshots/            # Bộ 17 ảnh chụp màn hình giao diện ki-ốt thực tế (Tone Cam ViT)
-├── docs/                   # Báo cáo học phần hoàn chỉnh (HTML & PDF 18+ trang chuẩn Tone Cam ViT)
+
+---
+
+## 🔄 3. Luồng Nghiệp Vụ & Tính Năng Nổi Bật
+
+### 3.1. Luồng trạng thái chuẩn máy giao dịch thực tế (`ATMState`)
+```mermaid
+flowchart LR
+    WAIT["Màn chờ (WAIT)"] --> CARD["Đưa thẻ (CARD_INSERT)"]
+    CARD --> LANG["Chọn ngôn ngữ (LANGUAGE_SELECT)"]
+    LANG --> PIN["Nhập PIN (PIN_ENTRY)"]
+    PIN -->|Đúng PIN| MENU["Menu chính 4x2 (MAIN_MENU)"]
+    PIN -->|Sai 3 lần| LOCKED["Khóa & Giữ thẻ (CARD_LOCKED)"]
+    MENU --> PROC["Đang xử lý (PROCESSING)"]
+    PROC --> ASK["Hỏi in biên lai (ASK_RECEIPT)"]
+    ASK --> TAKE_CARD["Trả thẻ trước (TAKE_CARD)"]
+    TAKE_CARD -->|Giao dịch rút tiền| TAKE_CASH["Nhả tiền 15s (TAKE_CASH)"]
+    TAKE_CARD -->|GD khác & Có in| RECEIPT["In biên lai (RECEIPT_VIEW)"]
+    TAKE_CASH -->|Có in| RECEIPT
+    TAKE_CASH -->|Không in| ANOTHER["Giao dịch khác? (ANOTHER_TXN)"]
+    RECEIPT --> ANOTHER
+    ANOTHER -->|Kết thúc| WAIT
 ```
 
----
-
-## 2. Các Tính Năng & Màn Hình Giao Diện Đã Hoàn Thiện
-
-1. **Màn hình Chờ (`WAIT`)**: Nền tối Đen xám (`#18181B`), đồng hồ thời gian thực Cam ViT (`#E0562D`), nút chuyển ngữ song ngữ `VI | EN`, logo ATM vector, nút đưa thẻ nổi bật.
-2. **Màn hình Nhập thẻ (`CARD`)**: Nền kem ấm, định dạng số thẻ nhóm 4 số (`9704 0012 3456 7890`), 3 nút thẻ mẫu nền cam nhạt (`#FFF7ED` viền `#FDBA74`), con trỏ caret ở cuối chuỗi.
-3. **Màn hình Nhập PIN (`PIN`)**: Tiêu đề rút gọn `XÁC THỰC MÃ PIN`, `JPasswordField` cỡ chữ 30px viền Cam ViT, khung 360px cân đối, cụm Numpad chuẩn 3 màu tách biệt: **HỦY** (đỏ), **XÓA** (vàng hổ phách), **ĐỒNG Ý** (Cam ViT `#E0562D`).
-4. **Màn hình Menu chính (`MENU`)**: Lưới **4 trái – 4 phải đối xứng** chuẩn ki-ốt ngân hàng:
-   - *Cột trái*: Rút tiền mặt, Nạp tiền mặt, Chuyển khoản, Xem số dư (căn lề trái kèm `‹`).
-   - *Cột phải*: Đổi mã PIN, Sao kê mini, Rút nhanh 500k, Đăng xuất / Trả thẻ (căn lề phải kèm `›`).
-   - *Tâm điểm giữa*: Mô phỏng phôi thẻ EMV dập nổi sang trọng, Lời chào trân trọng, Tên chủ thẻ và Số tài khoản.
-5. **Màn hình Xem số dư (`BALANCE`)**: Thẻ thông tin tài khoản riêng biệt nền `#FFF7ED` viền `#FED7AA`, số dư khả dụng cỡ chữ 26px màu Cam ViT nổi bật.
-6. **Màn hình Rút tiền (`WITHDRAW`)**: 6 mệnh giá cố định, ô nhập số khác thu gọn 1 dòng căn phải (48px) có `DocumentFilter` tự động chèn dấu chấm phân cách hàng nghìn.
-7. **Màn hình Nạp tiền mặt (`DEPOSIT`)**: Tính năng nạp tiền mặt trực tiếp, kiểm soát bội số 50k và hạn mức 50.000.000đ/lần.
-8. **Màn hình Xử lý giao dịch (`PROCESSING`)**: Thông điệp an toàn động theo từng nghiệp vụ (rút tiền, nạp tiền, chuyển khoản, đổi PIN), thanh tiến trình Cam ViT.
-9. **Màn hình Hỏi in biên lai (`ASK_RECEIPT`)**: Thông báo giao dịch thành công, nút in biên lai Cam ViT, nút không in viền Secondary Outline và bảng hiển thị cơ số tờ tiền nhả ra (500k, 200k, 100k, 50k theo thuật toán tham lam).
-10. **Màn hình Chuyển khoản (`TRANSFER`)**: Kiểm tra tên người thụ hưởng tức thì, ô nhập số tiền highlight Cam ViT trên nền cam nhạt.
-11. **Màn hình Xác nhận chuyển khoản (`CONFIRM_TRANSFER`)**: Đối soát người gửi, người nhận, số tiền màu Cam ViT `#E0562D`, phí giao dịch 0 VNĐ, nút XÁC NHẬN CHUYỂN Cam ViT đồng bộ.
-12. **Màn hình Đổi mã PIN (`CHANGE_PIN`)**: 3 ô bảo mật kèm bàn phím số ảo, thống nhất phím ĐỒNG Ý Cam ViT.
-13. **Màn hình Sao kê mini (`STATEMENT`)**: Bảng `JTable` 5 cột rõ nét, thanh tóm tắt thông tin tài khoản phía trên, header căn phải đồng bộ với số tiền, bổ sung nút **XUẤT SAO KÊ (.TXT)** trực tiếp.
-14. **Màn hình Hóa đơn in nhiệt (`RECEIPT`)**: Mô phỏng giấy in nhiệt 80mm: Mã máy ATM (`VB-DN-086`), Mã GD, chi tiết cơ số tờ tiền nhả ra, phí 0đ, nút lưu file `.txt` thực tế.
-15. **Màn hình Cảnh báo nhập sai PIN (`PIN Error`)**: Bọc HTML xuống dòng không bị cắt chữ, tự động xóa trắng ô PIN và đổi sang viền đỏ `#DC2626`.
-16. **Màn hình Cảnh báo vượt hạn mức (`WITHDRAW Error`)**: Nhãn đỏ báo lỗi tại chỗ và viền đỏ ô nhập tiền.
-17. **Màn hình Chế độ tiếng Anh (`English Bilingual`)**: Song ngữ 100% chuẩn ngân hàng quốc tế, trạng thái CSDL xanh lục `● DB: Ready`.
+### 3.2. Điểm nhấn kỹ thuật & bảo mật
+- **Bảo vệ an toàn trước quên thẻ (Card-Before-Cash)**: Sau khi giao dịch được duyệt và chọn in/không in biên lai, máy bắt buộc đẩy thẻ ra tại **KHE THẺ** và chờ khách nhận lại thẻ trước khi mở **KHE NHẬN TIỀN**.
+- **Đếm ngược thu hồi tiền mặt 15 giây**: Tại màn hình nhận tiền (`TAKE_CASH`), bộ đếm thời gian thực đếm ngược từ `15s` về `0s`; nếu khách không nhận, máy tự động thu hồi tiền vào khay bảo mật và cảnh báo.
+- **Thuật toán chia tiền mặt thông minh (`CashDispenser`)**: Kết hợp quy hoạch động (Dynamic Programming) và tham lam (Greedy) trên 4 mệnh giá `500.000đ`, `200.000đ`, `100.000đ`, `50.000đ`, đảm bảo số tờ tối thiểu và không vượt quá giới hạn **40 tờ/lần rút**.
+- **Giao dịch CSDL chuẩn ACID & Chống Deadlock**:
+  - Sử dụng `SELECT ... FOR UPDATE` để khóa dòng tài khoản và kho tiền trong suốt giao dịch.
+  - Khi chuyển khoản nội bộ (`VITB - VITBANK`), hệ thống luôn khóa hai tài khoản theo thứ tự `id` tăng dần (`Math.min(accId, destId)` trước), triệt tiêu hoàn toàn nguy cơ deadlock khi hai tài khoản chuyển chéo `A ↔ B` đồng thời.
+- **Băm mã PIN có muối (`PBKDF2WithHmacSHA256`)**: Mã PIN mới được băm với Salt ngẫu nhiên 128-bit và `65.536` vòng lặp (`PBKDF2$65536$<salt>$<hash>`), đồng thời tương thích ngược với dữ liệu băm `SHA-256` kèm kiểm tra chặn PIN yếu (`000000`, `123456`, `654321`, số lặp).
+- **Bảo mật hiển thị**: Tự động che số thẻ (`9704 •••• •••• 7890`), che số tài khoản (`••••••7890`) trên màn hình và biên lai; chuẩn hóa tên chủ thẻ không dấu in hoa theo chuẩn ngân hàng.
 
 ---
 
-## 3. Hướng Dẫn Kết Nối CSDL MySQL (Xử Lý Lỗi "Thẻ Không Tồn Tại")
+## 💳 4. Dữ Liệu Thử Nghiệm Có Sẵn (`database/seed.sql`)
 
-> [!IMPORTANT]
-> Nếu thấy thông báo **"Số thẻ không tồn tại"** hoặc **"Lỗi kết nối CSDL"**, đó là do MySQL trên máy chưa được cấp mật khẩu kết nối hoặc chưa khởi tạo database `atm_db`.
-
-Có 2 cách kích hoạt kết nối cực kỳ nhanh chóng:
-- **Cách 1 (Ngay trên giao diện ATM - Khuyên dùng)**:
-  1. Khởi chạy ATM, nhìn xuống góc dưới bên trái màn hình thấy dòng chữ: `● CSDL: Chưa kết nối (Nhấp để cấu hình)`.
-  2. Nhấp chuột vào dòng chữ này, một hộp thoại hiện lên: nhập `MySQL User: root` và `MySQL Password` của máy Ngài.
-  3. Bấm **OK**. Hệ thống sẽ tự động tạo cơ sở dữ liệu `atm_db`, tạo 3 bảng và nạp sẵn 3 thẻ mẫu, sau đó chuyển sang xanh `● CSDL: Sẵn sàng`.
-- **Cách 2 (Qua dòng lệnh)**:
-  - Chạy tệp `init_db.bat` và nhập mật khẩu root của MySQL khi được hỏi.
-
----
-
-## 3. Dữ Liệu Thử Nghiệm Sẵn Có
-
-| STT | Số thẻ | Số tài khoản | Tên chủ thẻ | Mã PIN gốc | Số dư ban đầu | Trạng thái |
+### 4.1. Thẻ & Tài khoản nội bộ (`VITB - VITBANK` — Miễn phí chuyển khoản)
+| STT | Số thẻ (16 số) | Số tài khoản | Chủ tài khoản | Mã PIN | Số dư ban đầu | Trạng thái |
 |---|---|---|---|---|---|---|
-| 1 | `9704 0012 3456 7890` | `1234567890` | NGUYỄN VĂN AN | `123456` | 50.000.000 VNĐ | ACTIVE (Thử nghiệm rút, nạp, chuyển, đổi PIN) |
-| 2 | `9704 0098 7654 3210` | `0987654321` | TRẦN THỊ BÍCH | `654321` | 1.000.000 VNĐ | ACTIVE (Thử lỗi vượt quá số dư) |
-| 3 | `9704 0011 1122 2233` | `1111222233` | LÊ HOÀNG MINH | `111111` | 30.000.000 VNĐ | LOCKED (Thử lỗi thẻ đã bị khóa) |
+| 1 | `9704 0012 3456 7890` | `1234567890` | NGUYỄN VĂN AN | `123456` | `50.000.000 VNĐ` | `ACTIVE` (Đủ số dư & lịch sử 10 GD) |
+| 2 | `9704 0098 7654 3210` | `0987654321` | TRẦN THỊ BÍCH | `654321` | `1.000.000 VNĐ` | `ACTIVE` (Thử nghiệm nhận CK / vượt số dư) |
+| 3 | `9704 0011 1122 2233` | `1111222233` | LÊ HOÀNG MINH | `111111` | `30.000.000 VNĐ` | `LOCKED` (Thử nghiệm thẻ bị khóa) |
+
+### 4.2. Tài khoản liên ngân hàng (Phí chuyển khoản `5.500 VNĐ/giao dịch`)
+| Mã NH | Ngân hàng thụ hưởng | Số tài khoản nhận | Tên người thụ hưởng |
+|---|---|---|---|
+| `VCB` | Vietcombank | `0011001234567` | PHẠM MINH TUẤN |
+| `TCB` | Techcombank | `1903456789012` | NGUYỄN THỊ LAN ANH |
+| `MB` | MB Bank | `0905123456` | HOÀNG QUỐC BẢO |
+| `BIDV` | BIDV | `31410001234567` | ĐẶNG VĂN HÙNG |
+| `CTG` | VietinBank | `108001234567` | VŨ THỊ MAI HƯƠNG |
 
 ---
 
-## 4. Cách Khởi Chạy
+## ⌨️ 5. Phím Tắt Điều Khiển & Chế Độ Kỹ Thuật Viên
 
+| Phím tắt | Chức năng |
+|---|---|
+| `F1` – `F4` | Tương ứng 4 phím cứng FDK cột bên trái màn hình |
+| `F5` – `F8` | Tương ứng 4 phím cứng FDK cột bên phải màn hình |
+| `Enter` / `Esc` | Xác nhận thao tác hiện tại / Hủy bỏ hoặc Quay lại |
+| `Ctrl + Shift + D` | Mở **Bảng Điều Khiển Kỹ Thuật Viên (Dev / Admin Panel)**: cấu hình MySQL, nạp lại quỹ tiền, chuyển trạng thái `ONLINE` / `MAINTENANCE`, đưa nhanh thẻ mẫu vào khe đọc |
+| `Ctrl + Shift + Q` | Thoát nhanh ki-ốt |
+
+---
+
+## 🚀 6. Hướng Dẫn Cài Đặt, Khởi Chạy & Kiểm Thử
+
+### Yêu cầu môi trường
+- **JDK**: Java 21 trở lên
+- **Build Tool**: Apache Maven 3.9+
+- **Cơ sở dữ liệu**: MySQL Server 8.0 / 8.4 (chạy tại `localhost:3306`, database `atm_db`)
+
+### Bước 1: Khởi tạo Cơ sở dữ liệu MySQL
+- **Cách 1 (Tự động qua Script trên Windows):**
+  ```bat
+  scripts\init_db.bat
+  ```
+- **Cách 2 (Trực tiếp trong ứng dụng):** Khởi chạy ứng dụng, nhấn `Ctrl + Shift + D` để mở bảng Kỹ thuật viên, chọn **Cấu hình MySQL & Khởi tạo lại DB mẫu**, nhập tài khoản `root` và mật khẩu để ứng dụng tự động nạp `schema.sql` và `seed.sql`.
+
+### Bước 2: Biên dịch và khởi chạy ứng dụng
 ```bash
-# Biên dịch UTF-8
-javac -encoding UTF-8 -cp "mysql-connector-j.jar;." DB.java ATM.java
+# Chạy bằng Maven
+mvn clean compile exec:java
 
-# Khởi chạy chế độ Ki-ốt
-java -Dfile.encoding=UTF-8 -cp "mysql-connector-j.jar;." ATM
+# Hoặc dùng script khởi chạy nhanh
+scripts\run.bat      # Windows
+./scripts/run.sh     # Linux / macOS
 ```
-*Phím tắt quản trị thoát khẩn cấp ki-ốt:* **`Ctrl + Shift + Q`**.
+
+### Bước 3: Chạy bộ kiểm thử tự động (20 Unit & Concurrency Tests)
+Bộ kiểm thử chạy hoàn toàn độc lập trên **H2 In-Memory Database (chế độ tương thích MySQL)** mà không làm ảnh hưởng dữ liệu MySQL thật:
+```bash
+mvn test
+```
+Kiểm chứng đầy đủ 5 nhóm nghiệp vụ:
+1. `CashDispenserTest` (5 tests): Chia mệnh giá tối ưu, vét cạn mệnh giá nhỏ khi hết tờ lớn, giới hạn 40 tờ/giao dịch, kiểm tra hạn mức.
+2. `PinServiceTest` (5 tests): Băm và xác thực `PBKDF2` có muối ngẫu nhiên, tương thích ngược `SHA-256`, phát hiện PIN yếu và kiểm tra bước đổi PIN.
+3. `TransactionServicesTest` (5 tests): Khóa thẻ sau 3 lần sai PIN, rút/nạp cập nhật kho tiền, rollback khi tài khoản nhận không tồn tại, chống rút âm số dư khi đa luồng và chống deadlock khi chuyển khoản chéo `A ↔ B`.
+4. `TransferServiceTest` (3 tests): Kiểm tra phí liên ngân hàng, chặn chuyển khoản cho chính mình và kiểm tra hạn mức ngày.
+5. `FormatAndI18nTest` (2 tests): Định dạng tiền tệ, che số thẻ/tài khoản, bỏ dấu tên tiếng Việt và chuyển đổi ngôn ngữ `VI / EN`.
